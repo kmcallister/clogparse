@@ -5,9 +5,14 @@
 -- @http://tunes.org/~nef/logs/haskell/@.
 
 module Data.IRC.CLog.Parse
-  ( parseLog
+  (
+  -- * Parsing log files
+  parseLog
+  -- * Configuring the parser
   , Config(..)
   , haskellConfig
+  -- * Re-export
+  , module Data.IRC.Event
   ) where
 
 import Data.IRC.Event
@@ -34,7 +39,7 @@ import qualified Data.Time.LocalTime.TimeZone.Olson  as Zone
 
 -- | Configuring the parser.
 data Config = Config
-  { timeZone :: String   -- ^ Olson time zone name of local timestamps
+  { timeZone :: String   -- ^ Timestamp time zone; an Olson time zone name.
   , zoneInfo :: FilePath -- ^ Directory for time zone files; @$TZDIR@ overrides.
   } deriving (Show)
 
@@ -42,8 +47,7 @@ data Config = Config
 haskellConfig :: Config
 haskellConfig = Config
   { timeZone = "America/Los_Angeles"
-  , zoneInfo = "/usr/share/zoneinfo"
-  }
+  , zoneInfo = "/usr/share/zoneinfo" }
 
 
 -- Many text encodings are used on IRC.
@@ -135,7 +139,7 @@ getDay p = error ("cannot parse date from filename: " ++ p)
 parseLog :: Config -> FilePath -> IO [EventAt]
 parseLog (Config{timeZone=tz, zoneInfo=zi}) p = do
   tzdir <- either (const zi) id <$> IOError.try (Env.getEnv "TZDIR")
-  adj   <- TimeAdj (getDay p) <$> (getTimeConv $ Path.combine tzdir tz)
+  adj   <- TimeAdj (getDay p) <$> getTimeConv (Path.combine tzdir tz)
   b <- B.readFile p
   let go r@P.Fail{}    = error $ show r
       go (P.Partial g) = go $ g B.empty
