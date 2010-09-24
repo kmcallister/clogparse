@@ -1,8 +1,12 @@
 {-# LANGUAGE
     PatternGuards #-}
 
--- | Parse events from a clog file, such as those at
--- @http://tunes.org/~nef/logs/haskell/@.
+-- | Parse events from @clog@ output, such as the files
+-- at <http://tunes.org/~nef/logs/haskell/>.
+--
+-- IRC has no single standard character encoding.  This
+-- module decodes messages as UTF-8 following common
+-- practice on Freenode.
 
 module Data.IRC.CLog.Parse
   (
@@ -23,7 +27,6 @@ import Control.Applicative
 
 import qualified Data.Foldable            as F
 import qualified Data.Attoparsec          as P
-import qualified Data.Attoparsec.FastSet  as P
 import qualified Data.ByteString          as B
 import qualified Data.ByteString.Char8    as B8
 import qualified Data.Time                as Time
@@ -79,11 +82,9 @@ restOfLine = decode <$> P.takeWhile notNewline <* P.take 1
 nextLine :: P.Parser ()
 nextLine = P.skipWhile notNewline <* P.take 1
 
-atoi :: (Integral a, Num b) => [a] -> b
-atoi = foldl' (\n d -> n*10 + fromIntegral d - 48) 0
-
 digits :: Int -> P.Parser Int
 digits n = atoi <$> P.count n digit where
+  atoi = foldl' (\m d -> m*10 + fromIntegral d - 48) 0
   digit = P.satisfy isDigit
   isDigit w = w >= 48 && w <= 57
 
@@ -106,21 +107,20 @@ event = F.asum
     , global Topic  "topic: "
     , global Names  "names: "
     ]
-  , Talk   <$ str " <" <*> nick <*  str "> " <*> restOfLine
-  , Notice <$ str " -" <*> nick <*> restOfLine -- FIXME: parse host
-  , Act    <$ str " *" <*> nick <*  chr ' '  <*> restOfLine
+  , Talk   <$ str " <"  <*> nick <*  str "> " <*> restOfLine
+  , Notice <$ str " -"  <*> nick <*> restOfLine -- FIXME: parse host
+  , Act    <$ str " * " <*> nick <*  chr ' '  <*> restOfLine
   ] where
     chr  = P.word8  . fromIntegral . fromEnum
     str  = P.string . B8.pack
-    noNickC  = P.charClass " \n\r\t\v<>"
-    nick = (Nick . decode) <$> P.takeWhile (not . flip P.memberWord8 noNickC)
+    nick = (Nick . decode) <$> P.takeWhile (not . P.inClass " \n\r\t\v<>")
     userAct f x = f <$ str x <*> nick <* chr ' ' <*> restOfLine
     global f x = f <$ str x <*> restOfLine
 
 line :: TimeAdj -> P.Parser EventAt
 line adj =
-  P.try (EventAt  <$> time adj <*> event)
-  <|>   (BadParse <$> restOfLine)
+  P.try (EventAt <$> time adj <*> event)
+  <|>   (NoParse <$> restOfLine)
 
 safeRead :: (Read a) => String -> Maybe a
 safeRead x | [(v,"")] <- reads x = Just v
@@ -133,9 +133,10 @@ getDay p
   = Time.fromGregorian (2000 + fromIntegral y) m d
 getDay p = error ("cannot parse date from filename: " ++ p)
 
--- | Parse a log file.  The file name is significant; it is used
--- to set the date for timestamps.  It should have the format
--- @YY.MM.DD@@ as on @tunes.org@.
+-- | Parse a log file.  The file name (after any directory)
+-- is significant.  It is used to set the date for timestamps.
+-- It should have the form @YY.MM.DD@, as do the files on
+-- @tunes.org@.
 parseLog :: Config -> FilePath -> IO [EventAt]
 parseLog (Config{timeZone=tz, zoneInfo=zi}) p = do
   tzdir <- either (const zi) id <$> IOError.try (Env.getEnv "TZDIR")

@@ -1,6 +1,6 @@
 -- | Represents events in an IRC channel.
 -- These do not correspond precisely to messages of the IRC
--- protocol.  They provide a somewhat higher level view.
+-- protocol.  They provide a somewhat higher-level view.
 
 module Data.IRC.Event
   ( Nick   (..)
@@ -13,8 +13,8 @@ import qualified Data.Text as T
 
 -- | Event with timestamp.
 data EventAt
-  = EventAt  Time.UTCTime Event  -- ^ Event with timestamp.
-  | BadParse T.Text              -- ^ Unparsable line.
+  = EventAt Time.UTCTime Event  -- ^ Event with timestamp.
+  | NoParse T.Text              -- ^ Unparsable line.
   deriving (Show, Eq, Ord)
 
 -- | IRC nicks.
