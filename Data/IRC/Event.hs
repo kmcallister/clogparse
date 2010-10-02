@@ -52,7 +52,7 @@ data Event
 
 -- | For working with @'Event'@s generically.
 --
--- Indicates the "subject" of an event, if any, followed
+-- Indicates the \"subject\" of an event, if any, followed
 -- by other text.
 --
 -- The subject of a @'ReNick'@ event is the old nick.

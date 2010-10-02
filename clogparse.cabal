@@ -1,5 +1,5 @@
 name:                clogparse
-version:             0.1
+version:             0.2
 license:             BSD3
 license-file:        LICENSE
 synopsis:            Parse IRC logs such as the #haskell logs on tunes.org
