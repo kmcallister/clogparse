@@ -62,18 +62,20 @@ data GenericEvent
 
 -- | Decompose an @'Event'@ into a @'GenericEvent'@.
 decompose :: Event -> GenericEvent
-decompose x = go (GenericEvent $ toConstr x) x where
-  go c (Join   n t) = c (Just n) [t]
-  go c (Part   n t) = c (Just n) [t]
-  go c (Quit   n t) = c (Just n) [t]
-  go c (Talk   n t) = c (Just n) [t]
-  go c (Notice n t) = c (Just n) [t]
-  go c (Act    n t) = c (Just n) [t]
-  go c (Mode   n t) = c (Just n) [t]
+decompose x = go x where
+  c = GenericEvent $ toConstr x
 
-  go c (Log   t) = c Nothing [t]
-  go c (Topic t) = c Nothing [t]
-  go c (Names t) = c Nothing [t]
+  go (Join   n t) = c (Just n) [t]
+  go (Part   n t) = c (Just n) [t]
+  go (Quit   n t) = c (Just n) [t]
+  go (Talk   n t) = c (Just n) [t]
+  go (Notice n t) = c (Just n) [t]
+  go (Act    n t) = c (Just n) [t]
+  go (Mode   n t) = c (Just n) [t]
 
-  go c (ReNick n (Nick t)) = c (Just n) [t]
-  go c (Kick a (Nick b) t) = c (Just a) [b,t]
+  go (Log   t) = c Nothing [t]
+  go (Topic t) = c Nothing [t]
+  go (Names t) = c Nothing [t]
+
+  go (ReNick n (Nick t)) = c (Just n) [t]
+  go (Kick a (Nick b) t) = c (Just a) [b,t]
