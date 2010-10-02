@@ -11,7 +11,7 @@ module Data.IRC.Event
   , Event  (..)
   , EventAt(..)
 
-    -- * Decomposing events generically
+    -- * Generic events
   , GenericEvent(..)
   , decompose
   ) where
