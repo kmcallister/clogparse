@@ -1,3 +1,6 @@
+{-# LANGUAGE
+    DeriveDataTypeable #-}
+
 -- | Represents events in an IRC channel.
 -- These do not correspond precisely to messages of the IRC
 -- protocol.  They provide a somewhat higher-level view.
@@ -11,15 +14,20 @@ module Data.IRC.Event
 import qualified Data.Time as Time
 import qualified Data.Text as T
 
+import Data.Typeable ( Typeable )
+import Data.Data     ( Data     )
+
 -- | Event with timestamp.
 data EventAt
   = EventAt Time.UTCTime Event  -- ^ Event with timestamp.
   | NoParse T.Text              -- ^ Unparsable line.
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Typeable)
+  -- UTCTime lacks Data, so we can't derive it.
+  -- We don't want to force that orphan instance on users.
 
 -- | IRC nicks.
 newtype Nick = Nick T.Text
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Typeable, Data)
 
 -- | Events in an IRC channel.
 data Event
@@ -35,4 +43,4 @@ data Event
   | Log              T.Text  -- ^ Logging started or stopped.
   | Topic            T.Text  -- ^ Topic listing or change.
   | Names            T.Text  -- ^ Users list.
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Typeable, Data)
