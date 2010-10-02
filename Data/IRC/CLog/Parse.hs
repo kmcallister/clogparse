@@ -133,8 +133,10 @@ getDay p
   = Time.fromGregorian (2000 + fromIntegral y) m d
 getDay p = error ("cannot parse date from filename: " ++ p)
 
--- | Parse a log file.  The file name (after any directory)
--- is significant.  It is used to set the date for timestamps.
+-- | Parse a log file.
+--
+-- The file name (after any directory) is significant.
+-- It is used to set the date for timestamps.
 -- It should have the form @YY.MM.DD@, as do the files on
 -- @tunes.org@.
 parseLog :: Config -> FilePath -> IO [EventAt]
