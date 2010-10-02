@@ -6,16 +6,21 @@
 -- protocol.  They provide a somewhat higher-level view.
 
 module Data.IRC.Event
-  ( Nick   (..)
+  ( -- * Events
+    Nick   (..)
   , Event  (..)
   , EventAt(..)
+
+    -- * Decomposing events generically
+  , GenericEvent(..)
+  , decompose
   ) where
 
 import qualified Data.Time as Time
 import qualified Data.Text as T
 
 import Data.Typeable ( Typeable )
-import Data.Data     ( Data     )
+import Data.Data     ( Data, Constr, toConstr )
 
 -- | Event with timestamp.
 data EventAt
@@ -44,3 +49,31 @@ data Event
   | Topic            T.Text  -- ^ Topic listing or change.
   | Names            T.Text  -- ^ Users list.
   deriving (Show, Eq, Ord, Typeable, Data)
+
+-- | For working with @'Event'@s generically.
+--
+-- Indicates the "subject" of an event, if any, followed
+-- by other text.
+--
+-- The subject of a @'ReNick'@ event is the old nick.
+data GenericEvent
+  = GenericEvent Constr (Maybe Nick) [T.Text]
+  deriving (Show, Eq, Typeable)
+
+-- | Decompose an @'Event'@ into a @'GenericEvent'@.
+decompose :: Event -> GenericEvent
+decompose x = go (GenericEvent $ toConstr x) x where
+  go c (Join   n t) = c (Just n) [t]
+  go c (Part   n t) = c (Just n) [t]
+  go c (Quit   n t) = c (Just n) [t]
+  go c (Talk   n t) = c (Just n) [t]
+  go c (Notice n t) = c (Just n) [t]
+  go c (Act    n t) = c (Just n) [t]
+  go c (Mode   n t) = c (Just n) [t]
+
+  go c (Log   t) = c Nothing [t]
+  go c (Topic t) = c Nothing [t]
+  go c (Names t) = c Nothing [t]
+
+  go c (ReNick n (Nick t)) = c (Just n) [t]
+  go c (Kick a (Nick b) t) = c (Just a) [b,t]
