@@ -1,0 +1,9 @@
+clogparse parses IRC logs, such as the #haskell logs on tunes.org.
+
+Documentation is hosted at http://hackage.haskell.org/package/clogparse
+
+To build the documentation yourself, run
+
+  $ cabal configure && cabal haddock --hyperlink-source
+
+This will produce HTML documentation under dist/doc/html/clogparse
